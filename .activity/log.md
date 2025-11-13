@@ -1,1 +1,2 @@
 - 2025-11-11T21:39:17+05:30: Refactored input validation
+- 2025-11-13T22:26:04+05:30: Improved hash verification logic
