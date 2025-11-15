@@ -1,3 +1,4 @@
 - 2025-11-11T21:39:17+05:30: Refactored input validation
 - 2025-11-13T22:26:04+05:30: Improved hash verification logic
 - 2025-11-13T18:40:04+05:30: Enhanced error handling
+- 2025-11-15T09:40:10+05:30: Optimized file scanning
