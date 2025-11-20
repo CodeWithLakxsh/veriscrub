@@ -7,3 +7,4 @@
 - 2025-11-17T11:46:09+05:30: Improved hash verification logic
 - 2025-11-18T09:22:49+05:30: Updated dependency configs
 - 2025-11-19T15:39:15+05:30: Improved hash verification logic
+- 2025-11-20T09:35:55+05:30: Updated scrubbing algorithms
