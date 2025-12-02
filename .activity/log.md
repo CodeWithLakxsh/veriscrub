@@ -229,3 +229,4 @@
 - 2025-11-30T22:51:04+05:30: Deep scan optimization
 - 2025-11-30T13:43:25+05:30: Improved hashing
 - 2025-11-30T11:36:39+05:30: Pattern matching fix
+- 2025-12-02T08:01:55+05:30: Regex engine update
