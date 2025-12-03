@@ -17,3 +17,4 @@
 - 2025-11-28T13:07:11+05:30: Improved hash verification logic
 - 2025-11-28T11:51:16+05:30: Refactored input validation
 - 2025-12-03T11:09:55+05:30: Enhanced error handling
+- 2025-12-03T10:33:13+05:30: Updated dependency configs
