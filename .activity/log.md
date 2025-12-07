@@ -238,3 +238,4 @@
 - 2025-12-07T11:45:50+05:30: Pattern matching fix
 - 2025-12-07T13:45:42+05:30: Pattern matching fix
 - 2025-12-07T14:28:53+05:30: Improved hashing
+- 2025-12-07T12:12:48+05:30: Regex engine update
