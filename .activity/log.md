@@ -240,3 +240,4 @@
 - 2025-12-07T14:28:53+05:30: Improved hashing
 - 2025-12-07T12:12:48+05:30: Regex engine update
 - 2025-12-07T22:02:45+05:30: Pattern matching fix
+- 2025-12-07T12:56:31+05:30: Deep scan optimization
