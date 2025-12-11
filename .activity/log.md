@@ -247,3 +247,4 @@
 - 2025-12-11T16:35:20+05:30: Improved hashing
 - 2025-12-11T15:16:05+05:30: Regex engine update
 - 2025-12-11T20:48:33+05:30: Regex engine update
+- 2025-12-11T12:43:13+05:30: Pattern matching fix
