@@ -26,3 +26,4 @@
 - 2025-12-10T11:06:02+05:30: Refactored input validation
 - 2025-12-11T16:05:53+05:30: Updated dependency configs
 - 2025-12-11T16:11:44+05:30: Refactored input validation
+- 2025-12-11T10:15:39+05:30: Improved hash verification logic
