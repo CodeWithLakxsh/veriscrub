@@ -251,3 +251,4 @@
 - 2025-12-11T12:59:13+05:30: Pattern matching fix
 - 2025-12-11T18:29:59+05:30: Regex engine update
 - 2025-12-11T14:28:50+05:30: Deep scan optimization
+- 2025-12-12T13:09:41+05:30: Regex engine update
