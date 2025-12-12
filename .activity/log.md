@@ -254,3 +254,4 @@
 - 2025-12-12T13:09:41+05:30: Regex engine update
 - 2025-12-12T15:05:41+05:30: Improved hashing
 - 2025-12-12T09:50:21+05:30: Regex engine update
+- 2025-12-12T21:04:39+05:30: Deep scan optimization
