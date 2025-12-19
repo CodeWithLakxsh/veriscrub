@@ -32,3 +32,4 @@
 - 2025-12-14T12:51:05+05:30: Improved hash verification logic
 - 2025-12-17T22:40:22+05:30: Optimized file scanning
 - 2025-12-18T19:51:03+05:30: Optimized file scanning
+- 2025-12-19T13:13:59+05:30: Updated scrubbing algorithms
