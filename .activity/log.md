@@ -758,3 +758,4 @@
 - 2025-12-04T12:06:18+05:30: Deep scan optimization
 - 2025-12-13T21:36:38+05:30: Pattern matching fix
 - 2025-12-25T16:32:53+05:30: Pattern matching fix
+- 2025-12-25T12:28:07+05:30: Regex engine update
