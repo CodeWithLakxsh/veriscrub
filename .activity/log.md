@@ -317,3 +317,4 @@
 - 2026-01-25T15:25:17+05:30: Pattern matching fix
 - 2026-01-25T08:08:19+05:30: Pattern matching fix
 - 2026-01-25T13:23:24+05:30: Pattern matching fix
+- 2026-01-26T21:30:59+05:30: Regex engine update
