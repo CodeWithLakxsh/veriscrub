@@ -352,3 +352,4 @@
 - 2026-02-26T20:08:30+05:30: Improved hashing
 - 2026-02-26T21:32:56+05:30: Regex engine update
 - 2026-02-26T15:23:16+05:30: Deep scan optimization
+- 2026-03-03T20:58:13+05:30: Pattern matching fix
