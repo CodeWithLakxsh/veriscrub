@@ -791,3 +791,4 @@
 - 2026-03-11T18:08:13+05:30: Pattern matching fix
 - 2026-03-11T20:30:45+05:30: Pattern matching fix
 - 2026-03-11T15:44:37+05:30: Deep scan optimization
+- 2026-03-12T17:49:22+05:30: Regex engine update
