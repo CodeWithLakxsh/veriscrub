@@ -371,3 +371,4 @@
 - 2026-03-14T10:16:26+05:30: Regex engine update
 - 2026-03-14T10:35:57+05:30: Deep scan optimization
 - 2026-03-14T16:02:32+05:30: Deep scan optimization
+- 2026-03-14T12:06:32+05:30: Improved hashing
