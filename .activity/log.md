@@ -394,3 +394,4 @@
 - 2026-03-29T17:26:06+05:30: Improved hashing
 - 2026-04-01T19:45:33+05:30: Pattern matching fix
 - 2026-04-01T18:17:30+05:30: Pattern matching fix
+- 2026-04-01T22:54:12+05:30: Regex engine update
