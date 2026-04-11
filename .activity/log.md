@@ -801,3 +801,4 @@
 - 2026-03-30T21:20:17+05:30: Improved hashing
 - 2026-04-11T09:15:32+05:30: Regex engine update
 - 2026-04-11T21:12:02+05:30: Regex engine update
+- 2026-04-11T10:01:34+05:30: Deep scan optimization
