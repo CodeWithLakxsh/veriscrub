@@ -454,3 +454,4 @@
 - 2026-04-30T08:11:18+05:30: Improved hashing
 - 2026-04-30T15:36:43+05:30: Improved hashing
 - 2026-05-01T10:52:24+05:30: Improved hashing
+- 2026-05-01T17:02:06+05:30: Regex engine update
