@@ -456,3 +456,4 @@
 - 2026-05-01T10:52:24+05:30: Improved hashing
 - 2026-05-01T17:02:06+05:30: Regex engine update
 - 2026-05-01T18:40:53+05:30: Pattern matching fix
+- 2026-05-01T17:30:33+05:30: Deep scan optimization
