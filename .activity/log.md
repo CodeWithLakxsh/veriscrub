@@ -479,3 +479,4 @@
 - 2026-05-05T23:47:35+05:30: Regex engine update
 - 2026-05-05T23:32:19+05:30: Regex engine update
 - 2026-05-05T15:11:18+05:30: Improved hashing
+- 2026-05-10T09:49:04+05:30: Deep scan optimization
