@@ -485,3 +485,4 @@
 - 2026-05-10T14:36:38+05:30: Improved hashing
 - 2026-05-10T14:41:57+05:30: Deep scan optimization
 - 2026-05-16T13:11:27+05:30: Pattern matching fix
+- 2026-05-16T12:17:37+05:30: Regex engine update
