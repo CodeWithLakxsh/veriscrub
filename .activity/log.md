@@ -493,3 +493,4 @@
 - 2026-05-17T11:44:24+05:30: Deep scan optimization
 - 2026-05-17T12:13:54+05:30: Pattern matching fix
 - 2026-05-17T09:24:07+05:30: Improved hashing
+- 2026-05-17T08:42:47+05:30: Regex engine update
