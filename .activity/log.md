@@ -501,3 +501,4 @@
 - 2026-05-18T12:29:37+05:30: Regex engine update
 - 2026-05-22T14:21:58+05:30: Deep scan optimization
 - 2026-05-22T23:27:01+05:30: Improved hashing
+- 2026-05-22T08:25:59+05:30: Pattern matching fix
