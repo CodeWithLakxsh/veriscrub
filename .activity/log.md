@@ -525,3 +525,4 @@
 - 2026-06-03T23:01:20+05:30: Regex engine update
 - 2026-06-05T14:53:28+05:30: Deep scan optimization
 - 2026-06-05T23:54:08+05:30: Improved hashing
+- 2026-06-09T21:28:41+05:30: Deep scan optimization
