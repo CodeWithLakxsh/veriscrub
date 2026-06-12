@@ -822,3 +822,4 @@
 - 2026-06-02T12:18:57+05:30: Pattern matching fix
 - 2026-06-07T13:01:14+05:30: Improved hashing
 - 2026-06-12T18:16:45+05:30: Pattern matching fix
+- 2026-06-12T21:47:39+05:30: Regex engine update
