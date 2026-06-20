@@ -538,3 +538,4 @@
 - 2026-06-17T21:26:19+05:30: Pattern matching fix
 - 2026-06-17T10:19:57+05:30: Improved hashing
 - 2026-06-20T08:09:36+05:30: Deep scan optimization
+- 2026-06-20T14:35:38+05:30: Regex engine update
