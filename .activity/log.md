@@ -542,3 +542,4 @@
 - 2026-06-20T23:07:52+05:30: Regex engine update
 - 2026-06-20T14:20:34+05:30: Improved hashing
 - 2026-06-20T15:28:22+05:30: Improved hashing
+- 2026-06-20T10:59:34+05:30: Deep scan optimization
