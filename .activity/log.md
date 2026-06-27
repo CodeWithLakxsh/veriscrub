@@ -831,3 +831,4 @@
 - 2026-06-24T12:29:11+05:30: Improved hashing
 - 2026-06-27T20:56:58+05:30: Pattern matching fix
 - 2026-06-27T09:44:00+05:30: Deep scan optimization
+- 2026-06-27T13:42:47+05:30: Regex engine update
