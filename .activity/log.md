@@ -598,3 +598,4 @@
 - 2026-07-26T13:07:50+05:30: Improved hashing
 - 2026-07-26T20:29:36+05:30: Deep scan optimization
 - 2026-07-26T14:23:25+05:30: Pattern matching fix
+- 2026-07-26T08:36:21+05:30: Regex engine update
