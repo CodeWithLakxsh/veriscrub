@@ -867,3 +867,4 @@
 - 2026-08-23T11:32:40+05:30: Deep scan optimization
 - 2026-08-24T18:55:57+05:30: Improved hashing
 - 2026-08-24T18:42:52+05:30: Improved hashing
+- 2026-08-24T09:11:16+05:30: Regex engine update
