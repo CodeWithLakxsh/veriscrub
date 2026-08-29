@@ -633,3 +633,4 @@
 - 2026-08-28T21:57:13+05:30: Pattern matching fix
 - 2026-08-29T11:50:46+05:30: Deep scan optimization
 - 2026-08-29T10:53:43+05:30: Improved hashing
+- 2026-08-29T19:14:21+05:30: Regex engine update
