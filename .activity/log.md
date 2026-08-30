@@ -635,3 +635,4 @@
 - 2026-08-29T10:53:43+05:30: Improved hashing
 - 2026-08-29T19:14:21+05:30: Regex engine update
 - 2026-08-30T20:47:33+05:30: Improved hashing
+- 2026-08-30T12:47:13+05:30: Deep scan optimization
