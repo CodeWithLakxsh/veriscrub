@@ -681,3 +681,4 @@
 - 2026-09-27T11:46:37+05:30: Improved hashing
 - 2026-09-27T21:15:08+05:30: Pattern matching fix
 - 2026-10-03T17:03:37+05:30: Pattern matching fix
+- 2026-10-03T23:44:32+05:30: Regex engine update
