@@ -705,3 +705,4 @@
 - 2026-10-19T10:00:45+05:30: Improved hashing
 - 2026-10-19T08:37:52+05:30: Deep scan optimization
 - 2026-10-19T21:43:35+05:30: Pattern matching fix
+- 2026-10-19T08:35:24+05:30: Regex engine update
