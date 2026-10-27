@@ -900,3 +900,4 @@
 - 2026-10-12T10:45:33+05:30: Improved hashing
 - 2026-10-15T17:42:36+05:30: Improved hashing
 - 2026-10-20T12:39:13+05:30: Deep scan optimization
+- 2026-10-27T15:10:30+05:30: Regex engine update
