@@ -194,3 +194,19 @@ def test_missing_backend_for_jpeg_is_unsupported(tmp_path, capsys, monkeypatch):
         assert doc["results"][0]["status"] == "unsupported" and "exiftool" in doc["results"][0]["reason"]
         assert code == 3
     assert not (tmp_path / "o").exists()
+
+
+@pytest.mark.skipif(os.name == "nt" or (hasattr(os, "geteuid") and os.geteuid() == 0),
+                    reason="needs POSIX permissions and a non-root user")
+def test_unreadable_file_is_failed_not_inspected(tmp_path, capsys):
+    p = tmp_path / "locked.jpg"
+    p.write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 64)
+    p.chmod(0)
+    try:
+        for args in (["inspect", str(p)], ["clean", str(p), "--output-dir", str(tmp_path / "o")], ["verify", str(p)]):
+            code, doc = run_main(args + ["--json"], capsys)
+            r = doc["results"][0]
+            assert r["status"] == "failed" and "cannot read the file" in r["reason"], r
+            assert code == 1
+    finally:
+        p.chmod(0o644)

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Unreadable files (permission denied, or the macOS Photos library) are now reported as `failed` with a clear hint. Previously they appeared as `inspected` with no fields.
+
 ## [0.1.0] - 2026-11-06
 
 First public release.

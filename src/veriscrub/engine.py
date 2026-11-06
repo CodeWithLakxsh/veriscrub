@@ -88,8 +88,14 @@ def default_output(item: Item, output: Path | None, output_dir: Path | None, sin
 
 # ---------------------------------------------------------------- helpers
 
+class UnreadableError(OSError):
+    pass
+
+
 def _resolve(path: Path) -> tuple[str | None, str, Handler | None, list[str]]:
     det = detect(path)
+    if det.kind is None and det.label.startswith("unreadable"):
+        raise UnreadableError(det.label)
     warnings = []
     if det.ext_mismatch:
         warnings.append(f"extension '{path.suffix}' does not match the actual content ({det.label}); "
@@ -123,7 +129,13 @@ def _base_result(path: Path, command: str, status: Status, fmt: str | None, reas
 # ---------------------------------------------------------------- inspect
 
 def inspect_file(path: Path, policy: Policy, opts: Options) -> Result:
-    kind, label, handler, warnings = _resolve(path)
+    try:
+        kind, label, handler, warnings = _resolve(path)
+    except UnreadableError as exc:
+        return _base_result(path, "inspect", Status.FAILED, None,
+                            f"cannot read the file ({str(exc).removeprefix('unreadable ').strip('()')}); "
+                            "check permissions. On macOS, files inside the Photos library are protected: "
+                            "export the photo first (Photos > File > Export > Export Unmodified Original)")
     if handler is None and label.startswith("encrypted"):
         r = _base_result(path, "inspect", Status.INSPECTED, None, f"{label}: contents cannot be inspected")
         r.flags = ["encrypted"]
@@ -199,7 +211,13 @@ def clean_file(item: Item, dest: Path, policy: Policy, opts: Options, *, dry_run
     path = item.path
     if item.skip_reason:
         return _base_result(path, "clean", Status.SKIPPED, None, item.skip_reason)
-    kind, label, handler, warnings = _resolve(path)
+    try:
+        kind, label, handler, warnings = _resolve(path)
+    except UnreadableError as exc:
+        return _base_result(path, "clean", Status.FAILED, None,
+                            f"cannot read the file ({str(exc).removeprefix('unreadable ').strip('()')}); "
+                            "check permissions. On macOS, files inside the Photos library are protected: "
+                            "export the photo first (Photos > File > Export > Export Unmodified Original)")
     if handler is None and label.startswith("encrypted"):
         return _base_result(path, "clean", Status.SKIPPED, None,
                             f"{label}: reported only; encrypted documents are never opened or changed")
@@ -310,7 +328,13 @@ def clean_file(item: Item, dest: Path, policy: Policy, opts: Options, *, dry_run
 # ---------------------------------------------------------------- verify
 
 def verify_file(path: Path, policy: Policy, opts: Options, original: Path | None = None) -> Result:
-    kind, label, handler, warnings = _resolve(path)
+    try:
+        kind, label, handler, warnings = _resolve(path)
+    except UnreadableError as exc:
+        return _base_result(path, "verify", Status.FAILED, None,
+                            f"cannot read the file ({str(exc).removeprefix('unreadable ').strip('()')}); "
+                            "check permissions. On macOS, files inside the Photos library are protected: "
+                            "export the photo first (Photos > File > Export > Export Unmodified Original)")
     if handler is None:
         return _base_result(path, "verify", Status.UNSUPPORTED, None, f"{label}: not in the supported-format matrix")
     missing = handler.missing()
