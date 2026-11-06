@@ -8,6 +8,9 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `clean --report` writes `<name>.removed-metadata.txt` next to the cleaned file. It lists every removed field with its value, the GPS position in decimal degrees with a map link, the kept fields and all verification checks, under a "private, do not share" warning.
+- `clean --zip` publishes one `<name>.zip` containing the cleaned file and that report. The zip is re-opened and its cleaned file is hash-checked before it is saved.
+
 - `people` category, removed by default. It covers face regions and face IDs (Apple Photos and MWG/Microsoft region tags) and names of people in the photo.
 - JPEG MPF secondary images, such as the iPhone HDR gain map, are extracted and inspected instead of being reported as uninspected data. A new `mpf_images_preserved` check confirms they are still reachable after cleaning.
 

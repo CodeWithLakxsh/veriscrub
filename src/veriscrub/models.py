@@ -91,6 +91,7 @@ class Result:
     status: Status
     format: str | None = None
     output: str | None = None
+    report: str | None = None
     reason: str = ""
     fields: list[Field] = field(default_factory=list)
     removed: list[Field] = field(default_factory=list)
@@ -115,6 +116,8 @@ class Result:
         }
         if self.output:
             d["output"] = self.output
+        if self.report:
+            d["report"] = self.report
         if self.reason:
             d["reason"] = self.reason
         if self.command == "inspect" or (self.command == "verify" and self.fields):

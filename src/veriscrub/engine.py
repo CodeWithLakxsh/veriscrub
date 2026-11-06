@@ -302,13 +302,6 @@ def clean_file(item: Item, dest: Path, policy: Policy, opts: Options, *, dry_run
                 r.status = Status.FAILED
                 r.reason = "--strict: output would be only partially clean; nothing was published"
                 return r
-            final = publish(tmp, dest, on_collision=on_collision, reserved=reserved)
-            if final is None:
-                r.status, r.reason = Status.SKIPPED, f"output exists: {dest} (--on-collision skip)"
-                return r
-            r.output = str(final)
-            if final != dest:
-                r.warnings.append(f"output name was taken; wrote {final.name} instead")
             r.status = Status.PARTIAL if partial else Status.CLEAN
             if partial:
                 bits = []
@@ -319,6 +312,15 @@ def clean_file(item: Item, dest: Path, policy: Policy, opts: Options, *, dry_run
                 if residue:
                     bits.append("removed values still occur in the file bytes")
                 r.reason = "; ".join(bits)
+            if opts.bundle:
+                return _publish_bundle(r, handler, path, tmp, dest, wd, original_hash, opts, on_collision, reserved)
+            final = publish(tmp, dest, on_collision=on_collision, reserved=reserved)
+            if final is None:
+                r.status, r.reason = Status.SKIPPED, f"output exists: {dest} (--on-collision skip)"
+                return r
+            r.output = str(final)
+            if final != dest:
+                r.warnings.append(f"output name was taken; wrote {final.name} instead")
             return r
     except FileExistsError as exc:
         r.status, r.reason = Status.FAILED, str(exc)
@@ -326,6 +328,56 @@ def clean_file(item: Item, dest: Path, policy: Policy, opts: Options, *, dry_run
         r.status, r.reason = Status.FAILED, f"output could not be validated: {exc}; nothing was published"
     except (tools.ToolError, OSError) as exc:
         r.status, r.reason = Status.FAILED, f"{exc}; nothing was published"
+    return r
+
+
+def _publish_bundle(r: Result, handler: Handler, original: Path, tmp: Path, dest: Path, wd: Path,
+                    original_hash: str, opts: Options, on_collision: str, reserved: set[str] | None) -> Result:
+    """--report: cleaned file + <name>.removed-metadata.txt. --zip: both inside <name>.zip (verified)."""
+    import hashlib
+    import zipfile
+
+    from veriscrub.report import REPORT_SUFFIX, render
+
+    cleaned_sha = sha256_file(tmp)
+    before = handler.display_values(original, opts)
+    after = handler.display_values(tmp, opts)
+
+    if opts.bundle == "zip":
+        zip_dest = dest.with_name(dest.stem + ".zip")
+        report_name = dest.stem + REPORT_SUFFIX
+        text = render(r, original, dest.name, original_hash, cleaned_sha, before, after)
+        zpath = wd / "bundle.zip"
+        with zipfile.ZipFile(zpath, "x", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(tmp, dest.name)
+            zf.writestr(report_name, text.encode("utf-8"))
+        with zipfile.ZipFile(zpath) as zf:  # verify the bundle before publishing it
+            if zf.testzip() is not None or hashlib.sha256(zf.read(dest.name)).hexdigest() != cleaned_sha:
+                r.status, r.reason = Status.FAILED, "zip bundle failed verification; nothing was published"
+                return r
+        final = publish(zpath, zip_dest, on_collision=on_collision, reserved=reserved)
+        if final is None:
+            r.status, r.reason = Status.SKIPPED, f"output exists: {zip_dest} (--on-collision skip)"
+            return r
+        r.output = str(final)
+        r.report = f"{final}!{report_name}"
+        r.warnings.append(f"zip contains {dest.name} and {report_name}; the report holds the removed private "
+                          "values, so share only the image")
+        return r
+
+    final = publish(tmp, dest, on_collision=on_collision, reserved=reserved)
+    if final is None:
+        r.status, r.reason = Status.SKIPPED, f"output exists: {dest} (--on-collision skip)"
+        return r
+    r.output = str(final)
+    if final != dest:
+        r.warnings.append(f"output name was taken; wrote {final.name} instead")
+    text = render(r, original, final.name, original_hash, cleaned_sha, before, after)
+    rtmp = wd / "report.txt"
+    rtmp.write_text(text, encoding="utf-8")
+    rfinal = publish(rtmp, final.with_name(final.stem + REPORT_SUFFIX), on_collision="rename", reserved=reserved)
+    r.report = str(rfinal) if rfinal else None
+    r.warnings.append("the report holds the removed private values; keep it private and share only the cleaned file")
     return r
 
 

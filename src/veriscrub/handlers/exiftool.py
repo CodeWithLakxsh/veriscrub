@@ -39,8 +39,9 @@ def _exec(args: list[str], files: list[Path], timeout: float) -> tools.Completed
     return tools.run([exe, *args, *paths], timeout=timeout)
 
 
-def read(path: Path, timeout: float) -> dict[str, Any]:
-    cp = _exec(BASE_READ, [path], timeout)
+def read(path: Path, timeout: float, numeric: bool = True) -> dict[str, Any]:
+    args = BASE_READ if numeric else [a for a in BASE_READ if a != "-n"]
+    cp = _exec(args, [path], timeout)
     text = cp.stdout.decode("utf-8", "replace").strip()
     if not text:
         raise tools.ToolError(f"exiftool returned no data: {cp.err_text[:300]}")

@@ -36,7 +36,8 @@ Use the `veriscrub` CLI for all inspection and cleaning. Do not hand-edit metada
    - `skipped`: deliberately not changed. Give the `reason` (for example signed provenance, a digital signature, encryption, or streams that cannot be preserved).
    - `unsupported`: the format or variant is outside the verified matrix, or a backend is missing.
    - `failed`: an error occurred or verification failed. Nothing was published.
-5. Optionally confirm with `veriscrub verify --json <cleaned> --original <original>`.
+5. With `--report` or `--zip`, tell the user where the report is and that it contains the removed private values. Do not read or quote those values back into the chat unless the user asks.
+6. Optionally confirm with `veriscrub verify --json <cleaned> --original <original>`.
 
 ## Choosing options (only when the user asks)
 
@@ -49,6 +50,8 @@ Use the `veriscrub` CLI for all inspection and cleaning. Do not hand-edit metada
 | file has Content Credentials (C2PA): proceed anyway | `--allow-provenance-loss` (explain that the signed manifest becomes invalid) |
 | drop embedded cover art in audio | `--remove-artwork` |
 | refuse partially cleaned outputs | `--strict` |
+| "give me a list / file of what was removed" | `--report` (adds `<name>.removed-metadata.txt`) |
+| "zip the clean file with the removed data" | `--zip` (one zip: cleaned file + report) |
 
 By default the CLI removes location, device, author, people (face regions), comment, identifier, preview and custom fields. AI generation fields are kept unless `--remove-ai` is given. Orientation, colour profiles, rotation, language tags, AI-disclosure labels (IPTC DigitalSourceType) and provenance records are never removed.
 

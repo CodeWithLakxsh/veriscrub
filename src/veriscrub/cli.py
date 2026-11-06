@@ -82,6 +82,12 @@ def build_parser() -> argparse.ArgumentParser:
     out.add_argument("--output-dir", type=Path, help="write cleaned copies here (required for directories)")
     c.add_argument("--dry-run", action="store_true", help="show what would be removed; write nothing")
     c.add_argument("--strict", action="store_true", help="do not publish partially cleaned outputs")
+    bundle = c.add_mutually_exclusive_group()
+    bundle.add_argument("--report", action="store_true",
+                        help="also write <name>.removed-metadata.txt listing every removed field WITH its value "
+                             "(private: keep it, share only the cleaned file)")
+    bundle.add_argument("--zip", action="store_true",
+                        help="write one <name>.zip containing the cleaned file and the removed-metadata report")
     c.add_argument("--on-collision", choices=("rename", "skip", "fail"), default="rename",
                    help="when the output name exists: rename to name-1.ext (default), skip, or fail")
     c.add_argument("--no-recursive", action="store_true", help="do not descend into subdirectories")
@@ -145,6 +151,8 @@ def _print_human(results: list[Result], show_values: bool) -> None:
         w(line + "\n")
         if r.reason:
             w(f"    {safe_text(r.reason, 600)}\n")
+        if r.report:
+            w(f"    report: {safe_text(r.report, 300)}\n")
         if r.command == "inspect" and r.fields:
             planned = {f.key for f in r.planned}
             for f in r.fields:
@@ -231,7 +239,9 @@ def main(argv: list[str] | None = None) -> int:
                    allow_stream_loss=getattr(args, "allow_stream_loss", False),
                    allow_provenance_loss=getattr(args, "allow_provenance_loss", False),
                    remove_artwork=getattr(args, "remove_artwork", False),
-                   front_matter_keys=getattr(args, "front_matter_key", []))
+                   front_matter_keys=getattr(args, "front_matter_key", []),
+                   bundle="zip" if getattr(args, "zip", False) else ("report" if getattr(args, "report", False)
+                                                                     else None))
 
     results: list[Result] = []
     if args.command == "inspect":

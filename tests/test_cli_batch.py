@@ -159,3 +159,45 @@ def test_human_output_and_exit_codes(tmp_path):
     assert code == 3 and "[skipped]" in out
     code, out = run_subprocess(["inspect", str(src)])
     assert code == 0 and "[inspected]" in out
+
+
+def test_report_lists_removed_values_next_to_clean_file(tmp_path, capsys):
+    src = build.docx_private(tmp_path / "r.docx", comments=False, tracked=False)
+    code, doc = run_main(["clean", str(src), "--report", "--json"], capsys)
+    r = result(doc)
+    assert r["status"] == "clean"
+    report = Path(r["report"])
+    assert report.name == "r.cleaned.removed-metadata.txt" and Path(r["output"]).exists()
+    text = report.read_text(encoding="utf-8")
+    assert "PRIVATE" in text.splitlines()[3]
+    for value in (build.AUTHOR, build.EDITOR, build.COMPANY, "ACME-2024-0042"):
+        assert value in text  # the report is the one place values are written
+    assert "REMOVED (" in text and "KEPT (" in text and "[ok] document_content_unchanged" in text
+    assert build.AUTHOR not in json.dumps(doc)  # the terminal/JSON output stays redacted
+
+
+def test_zip_bundle_contains_verified_clean_file_and_report(tmp_path, capsys):
+    import zipfile
+
+    src = build.docx_private(tmp_path / "r.docx", comments=False, tracked=False)
+    out = tmp_path / "o"
+    code, doc = run_main(["clean", str(src), "--output-dir", str(out), "--zip", "--json"], capsys)
+    r = result(doc)
+    assert r["status"] == "clean" and tree(out) == ["r.zip"], tree(out)
+    with zipfile.ZipFile(out / "r.zip") as zf:
+        assert sorted(zf.namelist()) == ["r.docx", "r.removed-metadata.txt"]
+        cleaned = tmp_path / "from-zip.docx"
+        cleaned.write_bytes(zf.read("r.docx"))
+        assert build.AUTHOR in zf.read("r.removed-metadata.txt").decode("utf-8")
+    with zipfile.ZipFile(cleaned) as inner:
+        assert build.AUTHOR.encode() not in inner.read("docProps/core.xml")
+    # A second run never overwrites the first zip.
+    code, doc = run_main(["clean", str(src), "--output-dir", str(out), "--zip", "--json"], capsys)
+    assert Path(result(doc)["output"]).name == "r-1.zip"
+
+
+def test_dry_run_with_report_writes_nothing(tmp_path, capsys):
+    src = build.docx_private(tmp_path / "r.docx")
+    code, doc = run_main(["clean", str(src), "--output-dir", str(tmp_path / "o"), "--zip", "--dry-run", "--json"],
+                         capsys)
+    assert result(doc)["status"] == "dry_run" and tree(tmp_path / "o") == []

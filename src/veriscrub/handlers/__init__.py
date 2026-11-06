@@ -18,6 +18,8 @@ class Options:
         self.allow_provenance_loss: bool = kw.get("allow_provenance_loss", False)
         self.remove_artwork: bool = kw.get("remove_artwork", False)
         self.front_matter_keys: list[str] = kw.get("front_matter_keys", []) or []
+        # None, "report" (cleaned file + .removed-metadata.txt) or "zip" (both inside one zip)
+        self.bundle: str | None = kw.get("bundle")
 
 
 class Handler:
@@ -57,6 +59,10 @@ class Handler:
 
     def residue_scope(self, path: Path, insp: Inspection) -> list[tuple[str, Path | bytes]]:
         return [("file", path)]
+
+    def display_values(self, path: Path, opts: Options) -> dict[str, str]:
+        """Human-readable values for the report (e.g. '37 deg 46' 30" N'); default: raw values."""
+        return {}
 
     def artifact_keys(self, out: Inspection) -> set[str]:
         """Keys a backend always writes (e.g. a bare muxer name); reported as 'added', not 'remaining'."""

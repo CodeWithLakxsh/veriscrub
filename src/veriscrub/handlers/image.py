@@ -219,6 +219,13 @@ class ImageHandler(Handler):
         res["orientation_preserved"] = check(oa == ob, f"orientation={ob if ob is not None else 'none'}")
         return res
 
+    def display_values(self, path: Path, opts: Options) -> dict[str, str]:
+        try:
+            meta = et.read(path, opts.timeout, numeric=False)
+        except Exception:  # noqa: BLE001 - the report falls back to raw values
+            return {}
+        return {k: et.to_text(v) for k, v in meta.items()}
+
     def artifact_keys(self, out: Inspection) -> set[str]:
         return set()
 

@@ -224,3 +224,13 @@ def test_face_regions_removed_by_default(tmp_path, capsys):
     code, doc = run_main(["clean", str(src), "-o", str(out), "--json"], capsys)
     assert result(doc)["status"] == "clean"
     assert not [k for k in exif(out) if k.startswith("XMP-mwg-rs:")]
+
+
+def test_report_shows_gps_position_in_plain_numbers(tmp_path, capsys):
+    src = build.jpeg_private(tmp_path / "photo.jpg")
+    code, doc = run_main(["clean", str(src), "--report", "--json"], capsys)
+    r = result(doc)
+    text = Path(r["report"]).read_text(encoding="utf-8")
+    assert "37.774900 N, 122.419400 W" in text and "openstreetmap.org/?mlat=37.774900&mlon=-122.419400" in text
+    assert build.SERIAL in text and build.CAMERA_MODEL in text and "[location]" in text
+    assert "GPS" not in json.dumps([k for k in exif(Path(r["output"])) if k.startswith("GPS:")])

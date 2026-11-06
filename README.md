@@ -160,9 +160,13 @@ veriscrub clean ./trip --output-dir ./trip-clean     # batch; mirrors the folder
 veriscrub clean ./renders --output-dir ./share --remove-ai   # also strip prompts/seeds/workflows
 veriscrub clean ./trip --output-dir ./out --dry-run  # show the plan, write nothing
 veriscrub clean post.md --front-matter-key author --front-matter-key email
+veriscrub clean photo.jpg --report                       # + photo.cleaned.removed-metadata.txt (every removed value)
+veriscrub clean photo.jpg --zip                          # one photo.cleaned.zip = cleaned photo + that report
 veriscrub verify share/photo.jpg --original photo.jpg
 veriscrub clean -- -odd-name.jpg                      # "--" before names that start with "-"
 ```
+
+**A record of what was removed.** `--report` writes a text file next to the cleaned copy. `--zip` packs the cleaned copy and that text file into one zip, which is re-opened and checked before it is saved. The report lists every removed field **with its value**: GPS position in decimal degrees with a map link, phone/camera model, serial numbers, names, comments. It also lists the kept fields and every verification check. It starts with a warning, because it holds exactly the private data you removed: keep it to yourself and share only the cleaned file.
 
 Useful flags: `--also timestamp,descriptive`, `--all`, `--strict` (never publish partial results), `--on-collision rename|skip|fail`, `--allow-stream-loss`, `--allow-provenance-loss`, `--remove-artwork`, `--show-values`, `--timeout SECONDS`. Run `veriscrub clean --help` for the full category list.
 
