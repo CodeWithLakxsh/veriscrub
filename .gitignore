@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.code-review-graph/
+fixtures-out/
+*.cleaned.*
+.veriscrub-*/
+.DS_Store

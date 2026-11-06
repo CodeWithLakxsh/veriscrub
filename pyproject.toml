@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veriscrub"
+version = "0.1.0"
+description = "Offline Agent Skill + CLI to inspect and remove private metadata from images, video, audio, PDF, DOCX and Markdown, with verify-before-publish."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "CodeWithLakxsh" }]
+keywords = ["veriscrub", "metadata", "exif", "privacy", "gps", "ffmpeg", "exiftool", "agent-skills", "claude-code"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Multimedia",
+    "Topic :: Security",
+]
+# Core has no Python dependencies. ExifTool and FFmpeg are external programs.
+dependencies = []
+
+[project.optional-dependencies]
+pdf = ["pikepdf>=8"]
+test = ["pytest>=7", "Pillow>=10", "pikepdf>=8"]
+
+[project.scripts]
+veriscrub = "veriscrub.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/CodeWithLakxsh/veriscrub"
+Repository = "https://github.com/CodeWithLakxsh/veriscrub"
+Issues = "https://github.com/CodeWithLakxsh/veriscrub/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "exiftool: needs ExifTool",
+    "ffmpeg: needs FFmpeg and ffprobe",
+    "pdf: needs pikepdf",
+]
