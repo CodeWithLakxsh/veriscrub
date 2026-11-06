@@ -74,7 +74,7 @@ PRIVATE_EXIF_TAGS = [
     f"-GPSLatitude={abs(GPS_LAT)}", "-GPSLatitudeRef=N", f"-GPSLongitude={abs(GPS_LON)}", "-GPSLongitudeRef=W",
     "-GPSAltitude=12", f"-Make={CAMERA_MAKE}", f"-Model={CAMERA_MODEL}", f"-SerialNumber={SERIAL}",
     f"-Artist={AUTHOR}", f"-XMP-dc:Creator={AUTHOR}", f"-UserComment={COMMENT}", "-ImageUniqueID=0123456789abcdef0123456789abcdef",
-    "-Software=FixtureEditor 2.1", "-DateTimeOriginal=2024:05:06 07:08:09", "-Copyright=(c) Fixture Rights",
+    "-Software=FixtureEditor 2.1", "-DateTimeOriginal=2024:05:06 07:08:09", "-GPSDateStamp=2024:05:06", "-Copyright=(c) Fixture Rights",
 ]
 
 
@@ -150,6 +150,46 @@ def jpeg_c2pa(path: Path) -> Path:
         b"jumd" + b"c2pa\x00\x11\x00\x10\x80\x00\xaa\x008\x9bq" + b"\x03" + b"c2pa\x00"
     seg = b"\xff\xeb" + struct.pack(">H", len(jumbf) + 2) + jumbf
     path.write_bytes(data[:2] + seg + data[2:])
+    return path
+
+
+def jpeg_mpf(path: Path, secondary_private: bool = False, junk_trailer: bool = False) -> Path:
+    """iPhone-style JPEG: primary image + MPF index + a secondary image (like Apple's HDR gain map)."""
+    prim = path.with_name(path.stem + ".primary.jpg")
+    jpeg_private(prim)
+    secondary = path.with_name(path.stem + ".secondary.jpg")
+    _gradient("RGB", (16, 12)).save(secondary, "JPEG", quality=70)
+    if secondary_private:
+        exiftool_write(secondary, f"-GPSLatitude={abs(GPS_LAT)}", "-GPSLatitudeRef=N", f"-Artist={AUTHOR}")
+    else:
+        exiftool_write(secondary, "-XMP-dc:Format=image/jpeg")
+    P, Q = prim.read_bytes(), secondary.read_bytes()
+    prim.unlink()
+    secondary.unlink()
+    entries_off = 8 + 2 + 3 * 12 + 4
+    tiff = (b"II*\x00" + struct.pack("<I", 8) + struct.pack("<H", 3)
+            + struct.pack("<HHI", 0xB000, 7, 4) + b"0100"
+            + struct.pack("<HHII", 0xB001, 4, 1, 2)
+            + struct.pack("<HHII", 0xB002, 7, 32, entries_off)
+            + struct.pack("<I", 0))
+    app2_len = 2 + 4 + len(tiff) + 32
+    primary_size = 2 + 2 + app2_len + (len(P) - 2)
+    tiff += struct.pack("<IIIHH", 0x20030000, primary_size, 0, 0, 0)
+    tiff += struct.pack("<IIIHH", 0x00000000, len(Q), primary_size - 10, 0, 0)
+    seg = b"\xff\xe2" + struct.pack(">H", app2_len) + b"MPF\x00" + tiff
+    # Real cameras put the MPF APP2 segment after APP0/APP1 (and ICC APP2): insert it after the last APPn.
+    pos = 2
+    while P[pos] == 0xFF and 0xE0 <= P[pos + 1] <= 0xEF:
+        pos += 2 + struct.unpack(">H", P[pos + 2:pos + 4])[0]
+    tiff_pos = pos + 4 + 4
+    tiff = tiff[:-32]
+    tiff += struct.pack("<IIIHH", 0x20030000, primary_size, 0, 0, 0)
+    tiff += struct.pack("<IIIHH", 0x00000000, len(Q), primary_size - tiff_pos, 0, 0)
+    seg = b"\xff\xe2" + struct.pack(">H", app2_len) + b"MPF\x00" + tiff
+    data = P[:pos] + seg + P[pos:] + Q
+    if junk_trailer:
+        data += b"MOTIONPHOTO" + bytes(range(256)) * 4
+    path.write_bytes(data)
     return path
 
 

@@ -185,10 +185,14 @@ def _blocked(insp: Inspection, opts: Options) -> str | None:
 
 
 def _residue(handler: Handler, out_path: Path, out_insp: Inspection, removed: list[Field]) -> list[str]:
+    # A removed value that is legitimately part of a field still present in the output
+    # (e.g. the GPS date inside the retained DateTimeOriginal) is not residue.
+    kept_text = [f.value for f in out_insp.fields if f.value]
     values: list[str] = []
     for f in removed:
-        values.append(f.value)
-        values.extend(part for part in f.value.split("; ") if part)
+        for v in [f.value, *(part for part in f.value.split("; ") if part)]:
+            if not any(v.strip() in t for t in kept_text):
+                values.append(v)
     needles = value_needles(values)
     if not needles:
         return []

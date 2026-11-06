@@ -66,7 +66,7 @@ What gets removed by default and what needs an explicit flag:
 ```mermaid
 flowchart LR
     F["Metadata field"] --> Q{"Category"}
-    Q -->|"location, device, author,<br/>comment, identifier,<br/>preview, custom"| R1["Removed by default"]
+    Q -->|"location, device, author, people,<br/>comment, identifier,<br/>preview, custom"| R1["Removed by default"]
     Q -->|"ai, software"| R2["Removed with --remove-ai"]
     Q -->|"timestamp, descriptive,<br/>rights, capture, other"| R3["Removed with --also CAT or --all"]
     Q -->|"technical, disclosure,<br/>provenance"| R4["Never removed<br/>(orientation, ICC, rotation,<br/>DigitalSourceType, C2PA)"]
@@ -171,7 +171,7 @@ A shortened `clean --json` result:
 ```json
 {
   "tool": "veriscrub", "version": "0.1.0", "command": "clean",
-  "policy": {"remove": ["author", "comment", "custom", "device", "identifier", "location", "preview"]},
+  "policy": {"remove": ["author", "comment", "custom", "device", "identifier", "location", "people", "preview"]},
   "results": [{
     "path": "photo.jpg", "status": "clean", "format": "jpeg", "output": "out/photo.jpg",
     "removed":  [{"key": "EXIF:GPS:GPSLatitude", "category": "location", "value": "<redacted 7 chars>"}, "..."],
@@ -196,6 +196,7 @@ A shortened `clean --json` result:
 | `location` | removed | GPS, ISO 6709 location, city/country fields |
 | `device` | removed | make, model, body/lens serials, maker notes, Android/Apple device keys |
 | `author` | removed | Artist, Creator, By-line, dc:creator, lastModifiedBy, Company, Manager, MP3 artist/encoded_by |
+| `people` | removed | face regions and face IDs (e.g. Apple Photos, MWG/Microsoft region tags), names of people in the photo |
 | `comment` | removed | UserComment, JPEG COM, descriptions, PNG Comment, media comments |
 | `identifier` | removed | ImageUniqueID, XMP DocumentID/InstanceID/History, DOCX revision, PDF document IDs |
 | `preview` | removed | EXIF/IFD1 thumbnails |
@@ -238,7 +239,9 @@ Explicitly **unsupported variants**: animated WebP, APNG, `.docm`/`.doc`, WebM/3
 
 By default these are **skipped** and explained: files with C2PA/Content Credentials, signed or encrypted PDF/DOCX, and videos with subtitles, chapters, attachments, cover streams or data streams. Phone videos often carry data/metadata tracks such as timecode or GPS telemetry, so they are skipped until you pass `--allow-stream-loss`.
 
-These are reported as **partial**: DOCX comments and tracked changes, PDF annotations with author names, attachments or object-level XMP, JPEG trailer data (MPF/motion photos), and audio artwork that carries its own EXIF.
+These are reported as **partial**: DOCX comments and tracked changes, PDF annotations with author names, attachments or object-level XMP, JPEG trailer data that is not MPF (for example motion-photo video), MPF secondary images that carry their own private metadata, and audio artwork that carries its own EXIF.
+
+iPhone JPEGs embed an HDR gain map as an MPF secondary image. VeriScrub extracts and inspects every MPF image. If an image has no private metadata, it is kept byte-for-byte, and its pointer is checked after cleaning.
 
 "Verified end to end here" means the automated tests built synthetic fixtures, cleaned them, re-opened the outputs with an independent reader (ExifTool, Pillow, ffprobe/ffmpeg, pikepdf, zipfile), and checked removal, integrity, original hashes and failure paths. The full suite runs in [CI](.github/workflows/ci.yml) on Linux (Ubuntu, apt ExifTool and FFmpeg), macOS (Homebrew) and Windows (Chocolatey), on Python 3.10 and 3.13. A separate job runs with no ExifTool, FFmpeg or pikepdf, to prove that missing backends degrade to `unsupported`. Locally it was also run on macOS 26 (arm64) with Python 3.14.9, ExifTool 13.55, FFmpeg 9.0.2 and pikepdf 10.17.0.
 

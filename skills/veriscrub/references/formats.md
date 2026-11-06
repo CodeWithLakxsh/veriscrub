@@ -15,7 +15,7 @@ Every `clean` follows the same pipeline:
 
 | Format | Backend | Inspect | Clean | Verified after clean |
 |---|---|---|---|---|
-| JPEG | ExifTool + built-in parser | EXIF, IPTC, XMP, COM, MakerNotes, JUMBF | yes | targeted tags absent (ExifTool re-read), compressed image data + ICC identical, orientation identical |
+| JPEG | ExifTool + built-in parser | EXIF, IPTC, XMP, COM, MakerNotes, face regions, MPF secondary images, JUMBF | yes | targeted tags absent (ExifTool re-read), compressed image data + ICC + MPF images identical, orientation identical |
 | PNG | ExifTool + built-in chunk filter | eXIf/EXIF, XMP, tEXt/zTXt/iTXt by exact keyword, tIME | yes (static) | as JPEG, plus PLTE/tRNS/gAMA/cHRM/sRGB/iCCP chunks identical |
 | WebP | ExifTool + built-in parser | EXIF, XMP chunks | yes (static) | as JPEG, plus alpha flag, canvas size and ICCP identical |
 | MP4, MOV | ffprobe + FFmpeg stream copy | container and stream tags, Apple `mdta` keys, chapters, stream types | yes (audio/video streams only) | stream layout, per-stream packet SHA-256, duration (±0.1 s or 1 %), rotation, 2 s decode |
@@ -35,7 +35,10 @@ Every `clean` follows the same pipeline:
 - ExifTool 13.55 cannot delete PNG text chunks whose keyword it does not know, such as ComfyUI's `prompt` and `workflow`. Those chunks are removed by a built-in, CRC-checked chunk filter that matches the exact keyword. ExifTool then handles EXIF and XMP.
 - A1111-style parameters in JPEG/WebP `UserComment` and NovelAI-style JSON comments are classified as `ai` by content sniffing, so they are removed only with `--remove-ai`.
 - **Unsupported variants:** animated WebP, APNG, HEIC/AVIF, GIF, TIFF.
-- **Partial:** JPEG data after the end-of-image marker (MPF secondary images, motion-photo video) is kept and not inspected, so such files end up `partial`.
+- **MPF secondary images** (for example Apple's HDR gain map, or depth maps) are extracted and inspected. Without private metadata, they are kept byte-for-byte. With it, the result is `partial`.
+  - ExifTool 13.x does not adjust MPF offsets when it deletes a segment between the MPF index and the image data, such as a JPEG `COM`. VeriScrub recomputes the offsets from the actual image positions. The `mpf_images_preserved` check then re-extracts every secondary image, and a mismatch means `failed`.
+- **Partial:** any other JPEG data after the end-of-image marker (for example motion-photo video) is kept and not inspected.
+- Face regions (`XMP-mwg-rs`, `XMP-MP`, ...) are in the `people` category and are deleted as whole structures.
 - **Skipped by default:** C2PA/JUMBF (JPEG APP11, PNG `caBX`, WebP `C2PA`). Any edit invalidates the signed manifest. Override with `--allow-provenance-loss`.
 - Pixels are never re-encoded.
 

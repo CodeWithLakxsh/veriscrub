@@ -106,6 +106,77 @@ def parse_jpeg(data: bytes) -> ImageStructure:
     return st
 
 
+def _jpeg_layout(data: bytes) -> tuple[list[tuple[int, int, int]], int]:
+    """Return ([(marker, segment_start, payload_start)...] for header segments, end-of-image offset)."""
+    segs: list[tuple[int, int, int]] = []
+    i, n = 2, len(data)
+    while i < n:
+        while i < n and data[i] == 0xFF:
+            i += 1
+        marker = data[i]
+        i += 1
+        if marker == 0xD9:
+            return segs, i
+        if 0xD0 <= marker <= 0xD7 or marker == 0x01:
+            continue
+        seglen = struct.unpack(">H", data[i:i + 2])[0]
+        segs.append((marker, i - 2, i + 2))
+        i += seglen
+        if marker == 0xDA:
+            while i < n - 1 and not (data[i] == 0xFF and data[i + 1] not in (0x00, 0xFF) and not 0xD0 <= data[i + 1] <= 0xD7):
+                i += 1
+    raise MalformedError("JPEG has no end-of-image marker")
+
+
+def jpeg_fix_mpf_offsets(data: bytes) -> bytes | None:
+    """Recompute MPF image offsets from where the secondary images actually sit.
+
+    ExifTool 13.x does not adjust MPF offsets when it removes a segment (e.g. COM) that lies
+    between the MPF APP2 segment and the image data. The secondary images themselves are left
+    byte-identical after the primary's end-of-image marker, so their true offsets are known.
+    Returns patched bytes, or None if nothing needed changing. Only the MP entry table changes.
+    """
+    parse_jpeg(data)  # validates structure
+    segs, eoi = _jpeg_layout(data)
+    for marker, _seg_start, payload in segs:
+        if marker == 0xE2 and data[payload:payload + 4] == b"MPF\x00":
+            tiff = payload + 4
+            break
+    else:
+        return None
+    bo = data[tiff:tiff + 2]
+    if bo not in (b"II", b"MM"):
+        raise MalformedError("MPF header has an unknown byte order")
+    e = "<" if bo == b"II" else ">"
+    ifd = tiff + struct.unpack(e + "I", data[tiff + 4:tiff + 8])[0]
+    count = struct.unpack(e + "H", data[ifd:ifd + 2])[0]
+    table = None
+    for k in range(count):
+        ent = ifd + 2 + 12 * k
+        tag, _typ, cnt, val = struct.unpack(e + "HHII", data[ent:ent + 12])
+        if tag == 0xB002:
+            table, n_images = tiff + val, cnt // 16
+    if table is None or n_images < 1 or table + 16 * n_images > len(data):
+        return None
+    out = bytearray(data)
+    running = eoi
+    changed = False
+    for k in range(n_images):
+        ent = table + 16 * k
+        attr, size, off, d1, d2 = struct.unpack(e + "IIIHH", data[ent:ent + 16])
+        if k == 0:
+            new_size, new_off = eoi, 0
+        else:
+            new_size, new_off = size, running - tiff
+            running += size
+        if (new_size, new_off) != (size, off):
+            out[ent:ent + 16] = struct.pack(e + "IIIHH", attr, new_size, new_off, d1, d2)
+            changed = True
+    if running > len(data):
+        raise MalformedError("MPF images extend beyond the end of the file")
+    return bytes(out) if changed else None
+
+
 # ----------------------------------------------------------------- PNG
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"

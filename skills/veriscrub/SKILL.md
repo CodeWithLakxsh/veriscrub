@@ -25,7 +25,7 @@ Use the `veriscrub` CLI for all inspection and cleaning. Do not hand-edit metada
 ## Workflow
 
 1. If this is the first use in a session, or a command reports a missing backend, run `veriscrub doctor` and relay any install hints.
-2. **Inspect first:** `veriscrub inspect --json <path>`. Summarize the result by category (location, device, author, comment, ai, ...) and use the field keys, not the values. `planned` lists what `clean` would remove under the current flags.
+2. **Inspect first:** `veriscrub inspect --json <path>`. Summarize the result by category (location, device, author, people, comment, ai, ...) and use the field keys, not the values. `planned` lists what `clean` would remove under the current flags.
 3. **Clean:**
    - One file: `veriscrub clean --json <file>`. This writes `<name>.cleaned.<ext>` next to the original, or to the path given with `-o OUT`.
    - Folder or several files: `veriscrub clean --json <paths...> --output-dir <dir>`. The directory structure is mirrored. Name collisions get `-1`, `-2`, ... suffixes, and nothing is overwritten.
@@ -50,7 +50,7 @@ Use the `veriscrub` CLI for all inspection and cleaning. Do not hand-edit metada
 | drop embedded cover art in audio | `--remove-artwork` |
 | refuse partially cleaned outputs | `--strict` |
 
-By default the CLI removes location, device, author, comment, identifier, preview and custom fields. AI generation fields are kept unless `--remove-ai` is given. Orientation, colour profiles, rotation, language tags, AI-disclosure labels (IPTC DigitalSourceType) and provenance records are never removed.
+By default the CLI removes location, device, author, people (face regions), comment, identifier, preview and custom fields. AI generation fields are kept unless `--remove-ai` is given. Orientation, colour profiles, rotation, language tags, AI-disclosure labels (IPTC DigitalSourceType) and provenance records are never removed.
 
 ## Text and Markdown
 

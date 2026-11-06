@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 
 # Removed by default: fields that identify a person, place or device.
-DEFAULT = ("location", "device", "author", "comment", "identifier", "preview", "custom")
+DEFAULT = ("location", "device", "author", "people", "comment", "identifier", "preview", "custom")
 # Removed only on request.
 OPTIONAL = ("ai", "software", "timestamp", "descriptive", "rights", "capture", "other")
 # Never removed by this tool.
@@ -25,6 +25,7 @@ DESCRIPTIONS = {
     "location": "GPS coordinates and place names",
     "device": "camera/phone make, model, serial numbers, maker notes",
     "author": "author, artist, creator, owner, last-modified-by, company",
+    "people": "face regions, face IDs and people tags (names of people in the photo)",
     "comment": "free-text comments, descriptions, captions",
     "identifier": "unique document/instance IDs, revision counters, editing history",
     "preview": "embedded thumbnails/previews (may show pre-edit content)",
@@ -140,14 +141,16 @@ _IMG_RULES: list[tuple[str, re.Pattern[str]]] = [
     ("preview", re.compile(r"^(thumbnail.*|preview.*|jpgfromraw|otherimage.*|photoshopthumbnail)$")),
     ("software", re.compile(r"^(software|creatortool|processingsoftware|xmptoolkit|originatingprogram|"
                             r"programversion|historysoftwareagent)$")),
-    ("timestamp", re.compile(r"^(datetime.*|.*date|subsectime.*|offsettime.*|timecreated|"
+    ("timestamp", re.compile(r"^(datetime.*|.*date|datecreated|subsectime.*|offsettime.*|timecreated|"
                              r"digitalcreationtime|creationtime|releasetime|expirationtime|timezoneoffset)$")),
     ("rights", re.compile(r"^(copyright|copyrightnotice|rights|usageterms|webstatement|marked|"
                           r"copyrightflag|copyrightstatus)$")),
     ("descriptive", re.compile(r"^(title|objectname|headline|keywords|subject|rating|ratingpercent|label|"
                                r"category|supplementalcategories|xptitle|xpkeywords|documentname|pagename|"
-                               r"event|personinimage|scene|subjectcode|intellectualgenre|urgency)$")),
+                               r"event|scene|subjectcode|intellectualgenre|urgency)$")),
 ]
+
+PEOPLE_GROUPS = {"XMP-mwg-rs", "XMP-MP", "XMP-MPRI", "XMP-MPReg", "XMP-acdsee-rs"}
 
 _IGNORED_GROUPS0 = {"ExifTool", "System", "Composite", "File", "ICC_Profile", "JFIF", "MPF", "RIFF",
                     "PNG", "APP14", "Photoshop", "Trailer"}
@@ -169,6 +172,10 @@ def classify_exiftool(group0: str, group1: str, tag: str, value: str) -> str | N
         return "device"
     if group0 in ("JUMBF", "C2PA"):
         return "provenance"
+    if group1 in PEOPLE_GROUPS or t.startswith(("personinimage", "regionpersondisplayname", "regionname")):
+        return "people"
+    if group0 == "APP10" or (group0 == "JPEG" and group1 == "APP2"):
+        return "technical"  # Apple HDR gain curve / ISO 21496 gain-map URN, needed for HDR display
     if group0 == "Photoshop":
         # Photoshop IRB: thumbnails are previews, the rest is mostly technical.
         return "preview" if "thumbnail" in t else None

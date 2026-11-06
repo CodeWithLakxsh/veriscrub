@@ -53,6 +53,12 @@ def read(path: Path, timeout: float) -> dict[str, Any]:
     return data[0]
 
 
+def extract(path: Path, tag: str, timeout: float) -> bytes:
+    """Binary value of one tag (e.g. an MPF secondary image), or b"" if absent."""
+    cp = _exec(["-b", f"-{tag}"], [path], timeout)
+    return cp.stdout if cp.returncode == 0 else b""
+
+
 def write(src: Path, out: Path, delete_args: list[str], timeout: float) -> None:
     if out.exists():
         raise FileExistsError(out)

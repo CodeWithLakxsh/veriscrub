@@ -182,3 +182,45 @@ def test_missing_exiftool_is_reported(tmp_path, capsys, monkeypatch):
     code, doc = run_main(["clean", str(src), "--output-dir", str(tmp_path / "o"), "--json"], capsys)
     r = result(doc)
     assert r["status"] == "unsupported" and "exiftool" in r["reason"] and code == 3
+
+
+def test_iphone_style_mpf_secondary_inspected_and_kept(tmp_path, capsys):
+    src = build.jpeg_mpf(tmp_path / "iphone.jpg")
+    secondary = src.read_bytes()[-2000:]
+    code, doc = run_main(["inspect", str(src), "--json"], capsys)
+    r = result(doc)
+    assert "jpeg:mpf-secondary:1" in r["flags"] and not r.get("unhandled"), r
+    out = tmp_path / "c.jpg"
+    code, doc = run_main(["clean", str(src), "-o", str(out), "--json"], capsys)
+    r = result(doc)
+    assert r["status"] == "clean", r
+    assert out.read_bytes().endswith(secondary)  # secondary image kept byte-for-byte
+    assert subprocess.run(["exiftool", "-b", "-MPImage2", str(out)], capture_output=True).stdout.endswith(secondary)
+    assert not [k for k in exif(out) if k.startswith("GPS:")]
+
+
+def test_mpf_secondary_with_private_metadata_is_partial(tmp_path, capsys):
+    src = build.jpeg_mpf(tmp_path / "p.jpg", secondary_private=True)
+    code, doc = run_main(["clean", str(src), "--output-dir", str(tmp_path / "o"), "--json"], capsys)
+    r = result(doc)
+    assert r["status"] == "partial" and any("carry their own metadata" in u for u in r["unhandled"]), r
+
+
+def test_unknown_jpeg_trailer_is_partial(tmp_path, capsys):
+    src = build.jpeg_mpf(tmp_path / "m.jpg", junk_trailer=True)
+    code, doc = run_main(["clean", str(src), "--output-dir", str(tmp_path / "o"), "--json"], capsys)
+    r = result(doc)
+    assert r["status"] == "partial" and any("not inspected" in u for u in r["unhandled"]), r
+
+
+def test_face_regions_removed_by_default(tmp_path, capsys):
+    src = build.jpeg_private(tmp_path / "f.jpg")
+    build.exiftool_write(src, "-XMP-mwg-rs:RegionInfo={AppliedToDimensions={W=64,H=48,Unit=pixel},"
+                              "RegionList=[{Area={X=0.5,Y=0.5,W=0.2,H=0.2,Unit=normalized},Type=Face,Name=Jane}]}")
+    code, doc = run_main(["inspect", str(src), "--json"], capsys)
+    cats = {f["key"]: f["category"] for f in result(doc)["fields"]}
+    assert cats.get("XMP:XMP-mwg-rs:RegionName") == "people"
+    out = tmp_path / "c.jpg"
+    code, doc = run_main(["clean", str(src), "-o", str(out), "--json"], capsys)
+    assert result(doc)["status"] == "clean"
+    assert not [k for k in exif(out) if k.startswith("XMP-mwg-rs:")]

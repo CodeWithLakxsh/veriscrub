@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -9,10 +10,14 @@ from veriscrub import containers
 from veriscrub.handlers import Handler, Inspection, Options, check
 from veriscrub.handlers import exiftool as et
 from veriscrub.models import Field
-from veriscrub.policy import Policy, classify_exiftool, classify_png_text
+from veriscrub.policy import PEOPLE_GROUPS, Policy, classify_exiftool, classify_png_text
 from veriscrub.safeio import read_limited
 
 MAX_IMAGE = 512 << 20
+
+# Categories that make an embedded secondary image privacy-relevant.
+_PRIVATE = {"location", "device", "author", "people", "comment", "identifier", "custom", "ai", "preview"}
+MAX_MPF_IMAGES = 16
 
 _ORIENTATION_KEYS = ("EXIF:IFD0:Orientation", "XMP:XMP-tiff:Orientation")
 
@@ -65,9 +70,7 @@ class ImageHandler(Handler):
             insp.unsupported_reason = ("animated image (APNG / animated WebP) is outside the verified matrix; "
                                        "only static images are cleaned")
         if struct.trailer_bytes:
-            insp.unhandled.append(f"{struct.trailer_bytes} bytes after the JPEG end-of-image marker "
-                                  "(e.g. MPF secondary images or an embedded motion-photo video) are kept "
-                                  "and not inspected")
+            self._inspect_trailer(path, meta, struct, insp, opts)
         if struct.mpf:
             insp.flags.append("jpeg:mpf")
         if struct.icc_hash:
@@ -75,6 +78,63 @@ class ImageHandler(Handler):
         if struct.has_alpha:
             insp.flags.append("transparency")
         return insp
+
+    def _inspect_trailer(self, path: Path, meta: dict[str, Any], struct: containers.ImageStructure,
+                         insp: Inspection, opts: Options) -> None:
+        """Data after the JPEG end-of-image marker.
+
+        If it consists exactly of MPF secondary images (e.g. Apple's HDR gain map), each one is
+        extracted and inspected; they are kept byte-for-byte. Anything else is reported as uninspected.
+        """
+        uninspected = (f"{struct.trailer_bytes} bytes after the JPEG end-of-image marker (e.g. an embedded "
+                       "motion-photo video) are kept and not inspected")
+        try:
+            count = int(meta.get("MPF:MPF0:NumberOfImages", 0) or 0)
+        except (TypeError, ValueError):
+            count = 0
+        if not struct.mpf or count < 2 or count > MAX_MPF_IMAGES:
+            insp.unhandled.append(uninspected)
+            return
+        total = 0
+        private: list[str] = []
+        kinds: list[str] = []
+        with tempfile.TemporaryDirectory(prefix="veriscrub-mpf-") as tmp:
+            for i in range(2, count + 1):
+                blob = et.extract(path, f"MPImage{i}", opts.timeout)
+                if not blob:
+                    insp.unhandled.append(uninspected)
+                    return
+                total += len(blob)
+                try:
+                    sub_struct = containers.parse_jpeg(blob)
+                except containers.MalformedError:
+                    insp.unhandled.append(f"MPF secondary image {i} could not be parsed; it is kept and not inspected")
+                    return
+                if sub_struct.trailer_bytes:
+                    insp.unhandled.append(uninspected)
+                    return
+                sub = Path(tmp) / f"mp{i}.jpg"
+                sub.write_bytes(blob)
+                sub_meta = et.read(sub, opts.timeout)
+                for key, value in sub_meta.items():
+                    g0, g1, tag = et.split_key(key)
+                    cat = classify_exiftool(g0, g1, tag, et.to_text(value))
+                    if cat in _PRIVATE:
+                        private.append(f"{cat} ({tag})")
+                aux = str(sub_meta.get("XMP:XMP-apdi:AuxiliaryImageType", ""))
+                kinds.append("HDR gain map" if "hdrgainmap" in aux.lower() or any(
+                    k.startswith("XMP:XMP-HDRGainMap") for k in sub_meta) else f"secondary image {i}")
+        if total != struct.trailer_bytes:
+            insp.unhandled.append(uninspected)
+            return
+        what = ", ".join(kinds)
+        insp.flags.append(f"jpeg:mpf-secondary:{count - 1}")
+        if private:
+            insp.unhandled.append(f"embedded MPF image(s) ({what}) carry their own metadata: "
+                                  f"{', '.join(sorted(set(private)))}; they are kept unchanged")
+        else:
+            insp.warnings.append(f"embedded MPF image(s) ({what}) were inspected: no private metadata; "
+                                 "kept byte-for-byte")
 
     # ------------------------------------------------------------ clean
     def clean(self, src: Path, out: Path, kind: str, insp: Inspection, targeted: list[Field],
@@ -95,6 +155,11 @@ class ImageHandler(Handler):
             et.write(current, out, args, opts.timeout)
         else:
             out.write_bytes(current.read_bytes())
+        if kind == "jpeg" and any(f.startswith("jpeg:mpf-secondary:") for f in insp.flags):
+            fixed = containers.jpeg_fix_mpf_offsets(out.read_bytes())
+            if fixed is not None:
+                out.write_bytes(fixed)
+                notes.append("MPF image offsets re-computed after metadata removal (re-verified below)")
         return notes
 
     @staticmethod
@@ -118,6 +183,8 @@ class ImageHandler(Handler):
                 add("-IFD1:all=")
             elif g1 == "GPS":
                 add("-GPS:all=")
+            elif g1 in PEOPLE_GROUPS:
+                add(f"-{g1}:all=")  # face-region structures are deleted whole
             elif g0 == "File" and tag == "Comment":
                 add("-File:Comment=")
             else:
@@ -142,6 +209,11 @@ class ImageHandler(Handler):
                                              "ICC profile present and identical" if a.icc_hash else "no ICC profile"),
             "transparency_preserved": check(a.has_alpha == b.has_alpha, "alpha channel" if b.has_alpha else "no alpha channel"),
         }
+        mpf_a = [f for f in orig.flags if f.startswith("jpeg:mpf-secondary:")]
+        if mpf_a:
+            ok = mpf_a == [f for f in out.flags if f.startswith("jpeg:mpf-secondary:")]
+            res["mpf_images_preserved"] = check(ok, "embedded MPF image(s) still referenced and intact" if ok
+                                                else "embedded MPF image(s) are no longer reachable")
         oa = _orientation(orig.info["exif"])
         ob = _orientation(out.info["exif"])
         res["orientation_preserved"] = check(oa == ob, f"orientation={ob if ob is not None else 'none'}")

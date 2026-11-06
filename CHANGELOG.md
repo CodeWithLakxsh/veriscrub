@@ -6,8 +6,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `people` category, removed by default. It covers face regions and face IDs (Apple Photos and MWG/Microsoft region tags) and names of people in the photo.
+- JPEG MPF secondary images, such as the iPhone HDR gain map, are extracted and inspected instead of being reported as uninspected data. A new `mpf_images_preserved` check confirms they are still reachable after cleaning.
+
 ### Fixed
 
+- MPF offsets are recomputed after cleaning, because ExifTool 13.x leaves them stale when it deletes a segment such as `COM`. Previously the secondary images could become unreachable.
+- A removed value that legitimately remains inside a retained field (for example the GPS date inside `DateTimeOriginal`) no longer counts as residue.
+- `XMP-photoshop:DateCreated` is now classified as `timestamp`, and Apple HDR (APP10) and gain-map URN (APP2) data as `technical`.
 - Unreadable files (permission denied, or the macOS Photos library) are now reported as `failed` with a clear hint. Previously they appeared as `inspected` with no fields.
 
 ## [0.1.0] - 2026-11-06
