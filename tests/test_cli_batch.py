@@ -20,7 +20,7 @@ def sha(p: Path) -> str:
 
 
 def tree(d: Path) -> list[str]:
-    return sorted(str(p.relative_to(d)) for p in d.rglob("*")) if d.exists() else []
+    return sorted(p.relative_to(d).as_posix() for p in d.rglob("*")) if d.exists() else []
 
 
 def test_batch_mirrors_structure_and_handles_collisions(tmp_path, capsys):
