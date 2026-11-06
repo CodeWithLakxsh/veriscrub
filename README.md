@@ -5,6 +5,7 @@
 **Scrub private metadata from your files, then prove it's gone.**
 
 [![CI](https://github.com/CodeWithLakxsh/veriscrub/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeWithLakxsh/veriscrub/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/CodeWithLakxsh/veriscrub?sort=semver)](https://github.com/CodeWithLakxsh/veriscrub/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
 [![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-8A2BE2.svg)](skills/veriscrub/SKILL.md)
@@ -239,7 +240,7 @@ By default these are **skipped** and explained: files with C2PA/Content Credenti
 
 These are reported as **partial**: DOCX comments and tracked changes, PDF annotations with author names, attachments or object-level XMP, JPEG trailer data (MPF/motion photos), and audio artwork that carries its own EXIF.
 
-"Verified end to end here" means the automated tests built synthetic fixtures, cleaned them, re-opened the outputs with an independent reader (ExifTool, Pillow, ffprobe/ffmpeg, pikepdf, zipfile), and checked removal, integrity, original hashes and failure paths. The environment was macOS 26 (arm64), Python 3.14.9 and 3.10.20, ExifTool 13.55, FFmpeg 9.0.2 and pikepdf 10.17.0. Linux and Windows run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) but have not been run by the author yet.
+"Verified end to end here" means the automated tests built synthetic fixtures, cleaned them, re-opened the outputs with an independent reader (ExifTool, Pillow, ffprobe/ffmpeg, pikepdf, zipfile), and checked removal, integrity, original hashes and failure paths. The full suite runs in [CI](.github/workflows/ci.yml) on Linux (Ubuntu, apt ExifTool and FFmpeg), macOS (Homebrew) and Windows (Chocolatey), on Python 3.10 and 3.13. A separate job runs with no ExifTool, FFmpeg or pikepdf, to prove that missing backends degrade to `unsupported`. Locally it was also run on macOS 26 (arm64) with Python 3.14.9, ExifTool 13.55, FFmpeg 9.0.2 and pikepdf 10.17.0.
 
 ## Dependencies
 
@@ -302,6 +303,12 @@ src/veriscrub/              CLI, engine, policy, detection, safe I/O, container 
 src/veriscrub/handlers/     image (ExifTool), av (FFmpeg), pdf (pikepdf), docx, text
 tests/                          pytest suite + synthetic fixture builder
 ```
+
+## Contributing and security
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md). Please report vulnerabilities privately as described in [SECURITY.md](SECURITY.md). Release notes are in [CHANGELOG.md](CHANGELOG.md).
+
+Each [release](https://github.com/CodeWithLakxsh/veriscrub/releases) attaches the wheel, the sdist, and `veriscrub-skill-vX.Y.Z.zip`, which contains just the skill folder. Unzip it into `~/.claude/skills/` (or `.agents/skills/` for other clients).
 
 ## Star history
 

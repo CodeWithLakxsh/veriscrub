@@ -1,0 +1,15 @@
+name: Feature or format request
+description: Ask for a new format, metadata field or option.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need?
+      description: Which format or field, and which app or device creates it?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it matter for privacy?
