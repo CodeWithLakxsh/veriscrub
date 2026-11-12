@@ -202,3 +202,4 @@
 - 2026-11-11T13:36:54+05:30: Hash algo update
 - 2026-11-11T21:30:04+05:30: Hash algo update
 - 2026-11-12T16:34:34+05:30: Input sanitization
+- 2026-11-12T17:11:59+05:30: Improved scan engine
